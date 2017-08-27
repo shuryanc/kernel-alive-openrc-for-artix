@@ -7,5 +7,5 @@ KVER="${KVER:-$(uname -r)}"
 if test -e "/lib/modules/backup/${KVER}"; then 
    rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
 fi
-rm -rf /lib/modules/backup'
+rm -rf /lib/modules/backup
 
