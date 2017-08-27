@@ -7,5 +7,10 @@ KVER="${KVER:-$(uname -r)}"
 if test -e "/lib/modules/backup/${KVER}"; then 
    rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
 fi
+
+cd /lib/modules
+oldkern=$(ls backup)
+touch .old && echo "$oldkern" > .old
+
 rm -rf /lib/modules/backup
 

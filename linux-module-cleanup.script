@@ -2,11 +2,17 @@
 
 #systemd service to cleanup old kernel
 
-for i in /usr/lib/modules/[0-9]*; do
-if [[ $${i##*/} = \'%v\' ]] || pacman -Qo "$${i}"; then 
-continue
+if [ -e /lib/modules/.old ]; then
+
+	oldkern=$(cat /lib/modules/.old)
+	rm -r /lib/modules/$oldkern
+	rm /lib/modules/.old
+
 fi
-rsync -AHXal "$${i}" /usr/lib/modules/.old/
-rm -rf "$${i}"
-done
+
+#backup old kernel
+
+#rsync -AHXal "$${i}" /usr/lib/modules/.old/
+#rm -rf "$${i}"
+#done
 
