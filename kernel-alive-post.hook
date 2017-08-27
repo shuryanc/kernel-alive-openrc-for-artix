@@ -1,7 +1,8 @@
 [Trigger]
 Operation = Upgrade
+Operation = Remove
 Type = Package
-Target = linux
+Target = linux*
 
 [Action]
 Description = Restore Linux kernel modules
