@@ -1,5 +1,14 @@
 #!/bin/bash
 
+msg() {
+ALL_OFF="\e[1;0m"
+BOLD="\e[1;1m"
+GREEN="${BOLD}\e[1;32m"
+local mesg=$1; shift
+printf "
+${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
+}
+
 #post transaction
 
 KVER="${KVER:-$(uname -r)}"
@@ -13,4 +22,14 @@ oldkern=$(ls backup)
 touch .old && echo "$oldkern" > .old
 
 rm -rf /lib/modules/backup
+
+#Start systemd service to clean the old kernel during the boot
+systemctl enable linux-module-cleanup 
+
+#Inform user
+echo
+msg "Warning:
+-> We have upgrade current kernel, you can continue to use the pc.
+-> new kernel will work after reboot"
+echo
 
