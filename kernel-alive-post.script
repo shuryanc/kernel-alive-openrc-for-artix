@@ -30,6 +30,6 @@ systemctl enable linux-module-cleanup
 echo
 msg "Warning:
 -> We have upgrade current kernel, you can continue to use the pc.
--> new kernel will work after reboot"
+-> New kernel will work after reboot"
 echo
 

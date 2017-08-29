@@ -1,12 +1,34 @@
 #!/bin/bash
 
+msg() {
+ALL_OFF="\e[1;0m"
+BOLD="\e[1;1m"
+GREEN="${BOLD}\e[1;32m"
+local mesg=$1; shift
+printf "
+${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
+}
+
+#check if the previous kernel is still present
+
+if [ ! -e /lib/modules/.old ]; then 
+
 #Backup modules in use
 
-KVER="${KVER:-$(uname -r)}"
+	KVER="${KVER:-$(uname -r)}"
 
-if test -e "/lib/modules/${KVER}"; then
-   rsync -AHXal --delete-after "/lib/modules/${KVER}" /lib/modules/backup/
-fi
+	if test -e "/lib/modules/${KVER}"; then
+   		rsync -AHXal --delete-after "/lib/modules/${KVER}" /lib/modules/backup/
+	fi
+else
+	echo
+	msg "Warning:
+	-> Your Pc isen't rebooted after last
+	-> kernel upgrade. We stop the upgrade,
+	-> to perform this update please reboot now"
+	echo
+	exit 130
 
-exit 0 
+
+
 
