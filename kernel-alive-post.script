@@ -11,7 +11,7 @@ ${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
 
 #post transaction : check if still present old kernel if yes warning the user and do nothing
 
-if [ ! e /lib/modules/.old ]; then
+if [ ! -e /lib/modules/.old ]; then
 
 	KVER="${KVER:-$(uname -r)}"
 
