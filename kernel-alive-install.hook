@@ -6,4 +6,4 @@ Target = kernel-alive
 [Action]
 Description = Install systemd service to restore linux kernel modules
 When = PostTransaction
-Exec = systemctl enable linux-module-cleanup
+Exec = /bin/sh -c 'systemctl enable linux-module-cleanup'
