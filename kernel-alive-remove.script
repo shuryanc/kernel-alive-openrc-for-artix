@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#check if the previous kernel is still present if present remove all stuff
+
+if [ -e /lib/modules/.old ]; then
+
+	oldkern=$(cat /lib/modules/.old)
+	rm -r /lib/modules/$oldkern
+	rm /lib/modules/.old
+fi
+

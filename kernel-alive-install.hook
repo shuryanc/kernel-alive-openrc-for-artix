@@ -1,0 +1,9 @@
+[Trigger]
+Operation = Install
+Type = Package
+Target = kernel-alive
+
+[Action]
+Description = Install systemd service to restore linux kernel modules
+When = PostTransaction
+Exec = systemctl enable linux-module-cleanup
