@@ -7,5 +7,6 @@ Target = linux*
 [Action]
 Description = Restore Linux kernel modules
 When = PostTransaction
+Depends = coreutils
 Depends = rsync
 Exec = /usr/share/libalpm/scripts/kernel-alive-post
