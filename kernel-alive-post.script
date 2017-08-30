@@ -9,27 +9,36 @@ printf "
 ${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
 }
 
-#post transaction
+#post transaction : check if still present old kernel if yes warning the user and do nothing
 
-KVER="${KVER:-$(uname -r)}"
+if [ ! e /lib/modules/.old ]; then
 
-if test -e "/lib/modules/backup/${KVER}"; then 
-   rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
+	KVER="${KVER:-$(uname -r)}"
+
+	if test -e "/lib/modules/backup/${KVER}"; then 
+	rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
+	fi
+
+	cd /lib/modules
+	oldkern=$(ls backup)
+	touch .old && echo "$oldkern" > .old
+
+	rm -rf /lib/modules/backup
+
+	#Inform user
+	echo
+	msg "Warning:
+	-> We have upgrade current kernel, you can continue to use the pc.
+	-> New kernel will work after reboot"
+	echo
+else
+	echo
+	msg "Warning:
+	-> The PC was not restarted after the last
+	-> kernel update. Your kernel is old,
+	-> to run this update save yours
+	-> activity and restart now "
+	echo
 fi
 
-cd /lib/modules
-oldkern=$(ls backup)
-touch .old && echo "$oldkern" > .old
-
-rm -rf /lib/modules/backup
-
-#Start systemd service to clean the old kernel during the boot
-systemctl enable linux-module-cleanup 
-
-#Inform user
-echo
-msg "Warning:
--> We have upgrade current kernel, you can continue to use the pc.
--> New kernel will work after reboot"
-echo
 
