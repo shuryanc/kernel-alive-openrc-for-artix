@@ -2,11 +2,11 @@
 
 #systemd service to cleanup old kernel
 
-if [ -e /lib/modules/.old ]; then
+if [ -e /usr/lib/modules/.old ]; then
 
-	oldkern=$(cat /lib/modules/.old)
-	rm -r /lib/modules/$oldkern
-	rm /lib/modules/.old
+	oldkern=$(cat /usr/lib/modules/.old)
+	rm -r /usr/lib/modules/$oldkern
+	rm /usr/lib/modules/.old
 
 fi
 

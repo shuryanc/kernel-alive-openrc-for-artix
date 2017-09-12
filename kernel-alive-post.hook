@@ -1,6 +1,5 @@
 [Trigger]
 Operation = Upgrade
-Operation = Remove
 Type = Package
 Target = linux*
 
