@@ -5,9 +5,14 @@
 if [ -e /usr/lib/modules/.old ]; then
 
 	oldkern=$(cat /usr/lib/modules/.old)
-	rm -r /usr/lib/modules/$oldkern
+	currentkern=$(uname -r)
+	
+	#check if old is no current and in this case remove the modules
+	if [ $oldkern != $currentkern ]; then
+		rm -r /usr/lib/modules/$oldkern
+	fi
+	#remove only the hidden file
 	rm /usr/lib/modules/.old
-
 fi
 
 #backup old kernel
