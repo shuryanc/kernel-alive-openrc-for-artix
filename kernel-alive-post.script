@@ -28,7 +28,7 @@ if [ ! -e /lib/modules/.old ]; then
 	#Inform user
 	echo
 	msg "Warning:
-	-> We have upgrade current kernel, you can continue to use the pc.
+	-> upgraded the current kernel, you can continue to use the pc.
 	-> New kernel will work after reboot"
 	echo
 else
