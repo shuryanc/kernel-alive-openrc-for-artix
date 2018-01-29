@@ -8,8 +8,8 @@ if [ -e /usr/lib/modules/.old ]; then
 	currentkern=$(uname -r)
 	
 	#check if old is no current and in this case remove the modules
-	if [ $oldkern != $currentkern ]; then
-		rm -r /usr/lib/modules/$oldkern
+	if [ "$oldkern" != "$currentkern" ]; then
+		rm -r /usr/lib/modules/"$oldkern"
 	fi
 	#remove only the hidden file
 	rm /usr/lib/modules/.old

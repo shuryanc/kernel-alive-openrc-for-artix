@@ -5,7 +5,7 @@
 if [ -e /lib/modules/.old ]; then
 
 	oldkern=$(cat /lib/modules/.old)
-	rm -r /lib/modules/$oldkern
+	rm -r /lib/modules/"$oldkern"
 	rm /lib/modules/.old
 fi
 

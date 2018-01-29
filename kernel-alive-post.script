@@ -1,12 +1,11 @@
 #!/bin/bash
 
 msg() {
-ALL_OFF="\e[1;0m"
-BOLD="\e[1;1m"
-GREEN="${BOLD}\e[1;32m"
+ALL_OFF="\\e[1;0m"
+BOLD="\\e[1;1m"
+GREEN="${BOLD}\\e[1;32m"
 local mesg=$1; shift
-printf "
-${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
+printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
 }
 
 #post transaction : check if still present old kernel if yes warning the user and do nothing
@@ -15,11 +14,11 @@ if [ ! -e /lib/modules/.old ]; then
 
 	KVER="${KVER:-$(uname -r)}"
 
-	if test -e "/lib/modules/backup/${KVER}"; then 
+	if test -e "/lib/modules/backup/${KVER}"; then
 	rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
 	fi
 
-	cd /lib/modules
+	'cd /lib/modules || return'
 	oldkern=$(ls backup)
 	touch .old && echo "$oldkern" > .old
 
@@ -28,17 +27,15 @@ if [ ! -e /lib/modules/.old ]; then
 	#Inform user
 	echo
 	msg "Warning:
-	-> upgraded the current kernel, you can continue to use the pc.
-	-> New kernel will work after reboot"
-	echo
+	 -> upgraded the current kernel, you can continue to use the pc.
+	 -> New kernel will work after reboot
+	"
 else
 	echo
 	msg "Warning:
-	-> The PC was not restarted after the last
-	-> kernel update. Your kernel is old,
-	-> to run this update save yours
-	-> activity and restart now "
-	echo
+	 -> The PC was not restarted after the last
+	 -> kernel update. Your kernel is old,
+	 -> to run this update save yours
+	 -> activity and restart now
+	"
 fi
-
-
