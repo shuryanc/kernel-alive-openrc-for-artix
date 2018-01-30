@@ -18,7 +18,7 @@ if [ ! -e /lib/modules/.old ]; then
 	rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
 	fi
 
-	'cd /lib/modules || return'
+	cd /lib/modules
 	oldkern=$(ls backup)
 	touch .old && echo "$oldkern" > .old
 
