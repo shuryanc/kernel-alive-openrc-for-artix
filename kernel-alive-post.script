@@ -27,15 +27,17 @@ if [ ! -e /lib/modules/.old ]; then
 	#Inform user
 	echo
 	msg "Warning:
-	 -> upgraded the current kernel, you can continue to use the pc.
-	 -> New kernel will work after reboot
+	 -> Kernel has been updated. Modules of the current kernel
+	 -> has been backed up so you can continue to use your
+	 -> computer. However, the new kernel will only work 
+	 -> after a reboot.
 	"
 else
 	echo
 	msg "Warning:
-	 -> The PC was not restarted after the last
-	 -> kernel update. Your kernel is old,
-	 -> to run this update save yours
-	 -> activity and restart now
+	 -> This computer hasn't restarted for a while.
+	 -> You are running an old kernel. In order to use a
+	 -> new version of the kernel, please reboot your
+	 -> computer as soon as possible.
 	"
 fi
