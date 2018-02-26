@@ -37,7 +37,7 @@ else
 	msg "Warning:
 	 -> This computer hasn't restarted for a while.
 	 -> You are running an old kernel. In order to use a
-	 -> new version of the kernel, please reboot your
+	 -> new version of the kernel, please restart your
 	 -> computer as soon as possible.
 	"
 fi
