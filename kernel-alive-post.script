@@ -30,7 +30,7 @@ if [ ! -e /lib/modules/.old ]; then
 	 -> Kernel has been updated. Modules of the current kernel
 	 -> has been backed up so you can continue to use your
 	 -> computer. However, the new kernel will only work 
-	 -> after a reboot.
+	 -> at next boot.
 	"
 else
 	echo
