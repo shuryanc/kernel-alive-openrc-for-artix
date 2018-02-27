@@ -1,6 +1,6 @@
 # kernel-alive
 
-Collection of scripts that back up modules of currently used kernel after a kernel update to prevent some issues that happen after a kernel update. 
+Collection of scripts that back up modules of currently running kernel after a kernel update to prevent some issues that happen after a kernel update. 
 
 After a kernel update, the modules of the currently running kernel get deleted. Thus, they can't be loaded, which can cause some issues when those missing modules are needed. Modules backed up this way can still be loaded and used by the system if needed. Therefore, it helps the operating system to stay fully functional after a kernel update.
 
