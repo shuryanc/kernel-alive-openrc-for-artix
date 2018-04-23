@@ -28,14 +28,14 @@ if [ ! -e /lib/modules/.old ]; then
 	echo
 	msg "Warning:
 	 -> Kernel has been updated. Modules of the current kernel
-	 -> has been backed up so you can continue to use your
+	 -> have been backed up so you can continue to use your
 	 -> computer. However, the new kernel will only work 
 	 -> at next boot.
 	"
 else
 	echo
 	msg "Warning:
-	 -> This computer hasn't restarted for a while.
+	 -> This computer hasn't been restarted for a while.
 	 -> You are running an old kernel. In order to use a
 	 -> new version of the kernel, please restart your
 	 -> computer as soon as possible.
