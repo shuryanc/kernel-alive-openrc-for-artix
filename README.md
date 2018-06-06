@@ -7,3 +7,5 @@ After a kernel update, the modules of the currently running kernel are deleted. 
 Please note that new version of the kernel will still only be used at the next boot.
 
 (Created after this thread : https://forum.manjaro.org/t/reboot-required-notifier/29809 ;Took an idea found on Reddit)
+
+Moved on https://gitlab.manjaro.org/ste74/kernel-alive
