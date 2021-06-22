@@ -7,6 +7,6 @@ After a kernel update, the modules of the currently running kernel are deleted. 
 Its written for Artix-OpenRC with the ability to create boot option for different kernel versions.
 
 Note:
-The below files may not be needed.
+These files may not be needed:
   linux-module-cleanup.conf
   linux-module-cleanup.script
