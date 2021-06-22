@@ -12,7 +12,7 @@ printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
 
 if [ ! -e /lib/modules/.old ]; then
 
-	KVER="${KVER:-$(uname -r)}"
+	KVER=$(uname -r)
 
 	if test -e "/lib/modules/backup/${KVER}"; then
 	rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
@@ -23,6 +23,7 @@ if [ ! -e /lib/modules/.old ]; then
 	touch .old && echo "$oldkern" > .old
 
 	rm -rf /lib/modules/backup
+	update-grub
 
 	#Inform user
 	echo
