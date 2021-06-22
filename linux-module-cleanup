@@ -1,0 +1,8 @@
+#!/usr/bin/openrc-run
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License, v2 or later
+
+name=$RC_SVCNAME
+description="Clean up modules from old kernels"
+command="/usr/bin/linux-module-cleanup"
+command_args=""
