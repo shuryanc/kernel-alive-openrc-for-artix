@@ -6,4 +6,4 @@ Target = kernel-alive
 [Action]
 Description = Remove systemd service to restore linux kernel modules
 When = PreTransaction
-Exec = /bin/sh -c 'systemctl disable linux-modules-cleanup && /usr/share/libalpm/scripts/kernel-alive-remove'
+Exec = /bin/sh -c 'rc-update delete linux-modules-cleanup default && /usr/share/libalpm/scripts/kernel-alive-remove'
