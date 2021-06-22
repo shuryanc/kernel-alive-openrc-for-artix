@@ -2,10 +2,13 @@
 
 #check if the previous kernel is still present if present remove all stuff
 
-if [ -e /lib/modules/.old ]; then
+kernelno=$(wc -l < /lib/modules/kernel-alive-history.txt)
+if ["$kernelno"=="3"]; then
 
-	oldkern=$(cat /lib/modules/.old)
+	oldkern=$(head -n1 /lib/modules/kernel-alive-history.txt)
 	rm -r /lib/modules/"$oldkern"
-	rm /lib/modules/.old
+	rm /boot/vmlinuz-$oldkern
+	rm /boot/initramfs-$oldkern.img
+	sed -i '1d' /lib/modules/kernel-alive-history.txt
 fi
 
