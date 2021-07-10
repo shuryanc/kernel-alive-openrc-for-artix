@@ -10,29 +10,39 @@ printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
 
 #post transaction : check if still present old kernel if yes warning the user and do nothing
 
+KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
+KVER=$(uname -r)
 if [ ! -e /lib/modules/.old ]; then
 
-	KVER=$(uname -r)
+	if ["$KeepLatestKernel"=="1" || "$KeepLatestKernel"=="$KVER"]; then
+		KVER=$KeepLatestKernel
 
-	if test -e "/lib/modules/backup/${KVER}"; then
-	rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
-	fi
+		if test -e "/lib/modules/backup/${KVER}"; then
+		rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
+		fi
+	
+		cd /lib/modules
+		oldkern=$(ls backup)
+		touch .old && echo "$oldkern" > .old
 
-	cd /lib/modules
-	oldkern=$(ls backup)
-	touch .old && echo "$oldkern" > .old
-
-	rm -rf /lib/modules/backup
-	update-grub
-
-	#Inform user
-	echo
-	msg "Warning:
+		rm -rf /lib/modules/backup
+		update-grub
+		#Inform user
+		echo
+		msg "Warning:
 	 -> Kernel has been updated. Modules of the current kernel
 	 -> have been backed up so you can continue to use your
 	 -> computer. However, the new kernel will only work 
 	 -> at next boot.
 	"
+	else
+		echo
+		msg "Warning:
+	 -> Kernel has been updated. You can continue to use your
+	 -> computer. However, the new kernel will only work 
+	 -> at next boot.
+	 "
+	fi
 else
 	echo
 	msg "Warning:
