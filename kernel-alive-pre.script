@@ -1,20 +1,21 @@
 #!/bin/bash
 
 #check if the previous kernel is still present if present do nothing
-
+KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
+LatestKernelVer=$(file -bL /boot/vmlinuz-linux | grep -o 'version [^ ]*' | cut -d ' ' -f 2)
 if [ ! -e /lib/modules/.old ]; then 
 
 #Backup modules in use
-
-	KVER=$(uname -r)
-
-	if test -e "/lib/modules/${KVER}"; then
-		echo msg "Backing up kernel ${KVER}"
-   		rsync -AHXal --delete-after "/lib/modules/${KVER}" /lib/modules/backup/
-		mkinitcpio --generate /boot/initramfs-${KVER}.img --kernel ${KVER}
-		cp /lib/modules/${KVER}/vmlinuz /boot/vmlinuz-${KVER}
-		cp /boot/vmlinuz-linux /boot/vmlinuz-${KVER}
-		echo "${KVER}" >> /lib/modules/kernel-alive-history.txt
+	if ["$KeepLatestKernel"=="1"]; then
+		KVER=${LatestKernelVer}
+		if test -e "/lib/modules/${KVER}"; then
+			echo msg "Backing up kernel ${KVER}"
+   			rsync -AHXal --delete-after "/lib/modules/${KVER}" /lib/modules/backup/
+   			mkinitcpio --generate /boot/initramfs-${KVER}.img --kernel ${KVER}
+   			cp /lib/modules/${KVER}/vmlinuz /boot/vmlinuz-${KVER}
+			cp /boot/vmlinuz-linux /boot/vmlinuz-${KVER}
+			echo "${KVER}" >> /lib/modules/kernel-alive-history.txt
+		fi
 	fi
 fi
 	
