@@ -1,16 +1,40 @@
 #!/bin/bash
 
 #check if the previous kernel is still present if present remove all stuff
+kernel[0]="linux"
+kernel[1]="linux-hardened"
+kernel[2]="linux-lts"
+kernel[3]="linux-zen"
+echo "Do you want to keep the kernel backup?(y,n)"
+read ans
+if [[ $ans == "n" ]]; then
+	KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
+	MaxNumberOfBackup=$(grep -Po '(?<=MaxNumberOfBackup=).*' /lib/modules/kernel-alive.conf)
+	kernelno=$(sed -nE "/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}" /lib/modules/kernel-alive-history.txt | wc -l)
+	LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /lib/modules/kernel-alive-history.txt)
+	KVER=$(uname -r)
+	oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /lib/modules/kernel-alive-history.txt)
+	n=$((MaxNumberOfBackup+1))
+	a=""
+	while [[ $n > 0 ]]
+	do
+		a=$a"n;"
+		n=$((n-1))
+	done
 
-KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
-kernelno=$(wc -l < /lib/modules/kernel-alive-history.txt)
-#if [ -e /lib/modules/.old ]; then
-if ["$kernelno"=="3" && "$KeepLatestKernel"=="1"]; then
-	
-	oldkern=$(head -n1 /lib/modules/kernel-alive-history.txt)
-	rm -r /lib/modules/"$oldkern"
-	rm /boot/vmlinuz-$oldkern
-   	rm /boot/initramfs-$oldkern.img
-	sed -i '1d' /lib/modules/kernel-alive-history.txt
-#	rm /lib/modules/.old
+	if [ -e /lib/modules/.old ]; then
+		cp /lib/modules/.old /lib/modules/oldkern
+	fi
+	if ([[ "$KeepLatestKernel" == "1" ]] || [[ $KVER == ${LatestKernelVer} ]]) && [[ $kernelno > $MaxNumberOfBackup ]]; then
+		while [[ "$oldkern" == *"."*"."*"-artix"*"-"* ]] || [[ "$oldkern" == *"."*"."*"-"*"-lts" ]] || [[ "$oldkern" == *"."*"."*"-hardened"*"-"*"-hardened" ]] || [[ "$oldkern" == *"."*"."*"-zen"*"-"*"-zen" ]]
+		do
+			echo msg "Removing kernel ${oldkern}"
+			rm -r /lib/modules/"$oldkern"
+			rm /boot/vmlinuz-$oldkern
+    			rm /boot/initramfs-$oldkern.img
+			sed -i '/\['$1'\]/!b;'$a'd' /lib/modules/kernel-alive-history.txt
+			oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /lib/modules/kernel-alive-history.txt)
+		done
+#		rm /lib/modules/.old
+	fi
 fi
