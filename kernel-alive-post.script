@@ -10,12 +10,41 @@ printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
 
 #post transaction : check if still present old kernel if yes warning the user and do nothing
 
-KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
-KVER=$(uname -r)
-if [ ! -e /lib/modules/.old ]; then
 
-	if ["$KeepLatestKernel"=="1" || "$KeepLatestKernel"=="$KVER"]; then
-		KVER=$KeepLatestKernel
+KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
+MaxNumberOfBackup=$(grep -Po '(?<=MaxNumberOfBackup=).*' /lib/modules/kernel-alive.conf)
+linuxType=$(sed -n '/\['$1'\]/{n;p}' /lib/modules/kernel-alive.conf)
+kernelno=$(sed -nE "/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}" /lib/modules/kernel-alive-history.txt | wc -l)
+LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /lib/modules/kernel-alive-history.txt)
+KVER=$(uname -r)
+oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /lib/modules/kernel-alive-history.txt)
+NewKernelVer=$(file -bL /boot/vmlinuz-$1 | grep -o 'version [^ ]*' | cut -d ' ' -f 2)
+KVER=$(uname -r)
+n=$((MaxNumberOfBackup+1))
+a=""
+while [[ $n > 0 ]]
+do
+	a=$a"n;"
+	n=$((n-1))
+done
+if [[ "$KeepLatestKernel" == "1" ]] || [[ $KVER == ${LatestKernelVer} ]] || [[ $KVER != $linuxType ]]; then
+	while [[ "$oldkern" == $linuxType ]]
+	do
+		echo msg "Removing kernel ${oldkern}"
+		rm -r /lib/modules/"$oldkern"
+		rm /boot/vmlinuz-$1-$oldkern
+    		rm /boot/initramfs-$1-$oldkern.img
+		sed -i '/\['$1'\]/!b;'$a'd' /lib/modules/kernel-alive-history.txt
+		oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /lib/modules/kernel-alive-history.txt)
+	done
+#		rm /lib/modules/.old
+fi
+sed -i '/\[Latest '$1'\]/{N;s/\n.*//;}' /lib/modules/kernel-alive-history.txt
+sed -i '/\[Latest '$1'\]/a '${NewKernelVer} /lib/modules/kernel-alive-history.txt
+if [ ! -e /lib/modules/.old ]; then
+#Miss the logic to remove kernel when the user in the default kernel while keeplatestkernel=0
+	if [[ "$KeepLatestKernel"=="1" ]] || [[ $KVER==$LatestKernelVer ]] || [[ $KVER != $linuxType ]]; then
+		KVER=$LatestKernelVer
 
 		if test -e "/lib/modules/backup/${KVER}"; then
 		rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
@@ -38,9 +67,10 @@ if [ ! -e /lib/modules/.old ]; then
 	else
 		echo
 		msg "Warning:
-	 -> Kernel has been updated. You can continue to use your
-	 -> computer. However, the new kernel will only work 
-	 -> at next boot.
+	 -> Kernel has been updated. Modules of the current kernel
+	 -> have been replaced by the new kernel. You can continue
+	 -> to use your computer. However, the new kernel will only
+	 -> work at next boot.
 	 "
 	fi
 else
