@@ -1,21 +1,29 @@
 #!/bin/bash
 
 #check if the previous kernel is still present if present do nothing
+
 KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
-LatestKernelVer=$(file -bL /boot/vmlinuz-linux | grep -o 'version [^ ]*' | cut -d ' ' -f 2)
+MaxNumberOfBackup=$(grep -Po '(?<=MaxNumberOfBackup=).*' /lib/modules/kernel-alive.conf)
+linuxType=$(sed -n '/\['$1'\]/{n;p}' /lib/modules/kernel-alive.conf)
+kernelno=$(sed -nE "/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}" /lib/modules/kernel-alive-history.txt | wc -l)
+LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /lib/modules/kernel-alive-history.txt)
+KVER=$(uname -r)
+oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /lib/modules/kernel-alive-history.txt)
+
 if [ ! -e /lib/modules/.old ]; then 
 
 #Backup modules in use
-	if ["$KeepLatestKernel"=="1"]; then
+	if [[ "$KeepLatestKernel"=="1" ]] || [[ $KVER==${LatestKernelVer} ]] || [[ $KVER!=${linuxType} ]] || [[ $kernelno < $MaxNumberOfBackup ]]; then
 		KVER=${LatestKernelVer}
 		if test -e "/lib/modules/${KVER}"; then
 			echo msg "Backing up kernel ${KVER}"
+			cp /lib/modules/${KVER}/vmlinuz /boot/vmlinuz-$1-${KVER}
+			cp /boot/vmlinuz-$1 /boot/vmlinuz-$1-${KVER}
    			rsync -AHXal --delete-after "/lib/modules/${KVER}" /lib/modules/backup/
-   			mkinitcpio --generate /boot/initramfs-${KVER}.img --kernel ${KVER}
-   			cp /lib/modules/${KVER}/vmlinuz /boot/vmlinuz-${KVER}
-			cp /boot/vmlinuz-linux /boot/vmlinuz-${KVER}
-			echo "${KVER}" >> /lib/modules/kernel-alive-history.txt
+   			mkinitcpio --generate /boot/initramfs-$1-${KVER}.img --kernel ${KVER}
+			sed -i '/\['$1'\]/a '${KVER} /lib/modules/kernel-alive-history.txt
 		fi
 	fi
 fi
+	
 	
