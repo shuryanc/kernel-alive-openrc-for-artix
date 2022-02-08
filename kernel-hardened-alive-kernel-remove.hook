@@ -1,0 +1,9 @@
+[Trigger]
+Operation = Remove
+Type = Package
+Target = linux-hardened
+
+[Action]
+Description = Remove Linux kernel modules 
+When = PostTransaction
+Exec = /usr/share/libalpm/scripts/kernel-alive-kernel-remove linux-hardened

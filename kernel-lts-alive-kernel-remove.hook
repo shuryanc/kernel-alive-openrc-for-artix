@@ -1,0 +1,9 @@
+[Trigger]
+Operation = Remove
+Type = Package
+Target = linux-lts
+
+[Action]
+Description = Remove Linux kernel modules 
+When = PostTransaction
+Exec = /usr/share/libalpm/scripts/kernel-alive-kernel-remove linux-lts

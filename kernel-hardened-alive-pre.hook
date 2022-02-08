@@ -1,11 +1,10 @@
 [Trigger]
 Operation = Upgrade
 Type = Package
-Target = linux
-Target = !linux-*
+Target = linux*hardened*
 
 [Action]
 Description = Save Linux kernel modules
 When = PreTransaction
 Depends = rsync
-Exec = /usr/share/libalpm/scripts/kernel-alive-pre linux
+Exec = /usr/share/libalpm/scripts/kernel-alive-pre linux-hardened

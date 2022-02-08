@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#check if the previous kernel is still present if present remove all stuff
+
+echo "Do you want to keep the kernel backup?(y,n)"
+read ans
+if [[ $ans == "n" ]]; then
+	KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /etc/kernel-alive/kernel-alive.conf)
+	linuxType=$(sed -n '/\['$1'\]/{n;p}' /etc/kernel-alive/kernel-alive.conf)
+	kernelno=$(sed -nE "/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}" /etc/kernel-alive/kernel-alive-history.txt | wc -l)
+	LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /etc/kernel-alive/kernel-alive-history.txt)
+	KVER=$(uname -r)
+	oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"1"'!ba;p;q}' /etc/kernel-alive/kernel-alive-history.txt)
+
+	while [[ "$oldkern" == $linuxType ]] && [[ $kernelno > 0 ]]
+	do
+		echo msg "Removing kernel ${oldkern}"
+		rm -r /lib/modules/"$oldkern"
+		rm /boot/vmlinuz-$oldkern
+    		rm /boot/initramfs-$oldkern.img
+		sed -i '/\['$1'\]/!b;n;d' /etc/kernel-alive/kernel-alive-history.txt
+		oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"1"'!ba;p;q}' /etc/kernel-alive/kernel-alive-history.txt)
+		kernelno=$(sed -nE "/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}" /etc/kernel-alive/kernel-alive-history.txt | wc -l)
+	done
+#		rm /lib/modules/.old
+	
+fi

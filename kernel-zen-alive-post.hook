@@ -1,11 +1,10 @@
 [Trigger]
 Operation = Upgrade
 Type = Package
-Target = linux
-Target = !linux-*
+Target = linux*zen*
 
 [Action]
 Description = Restore Linux kernel modules
 When = PostTransaction
 Depends = rsync
-Exec = /usr/share/libalpm/scripts/kernel-alive-post linux
+Exec = /usr/share/libalpm/scripts/kernel-alive-post linux-zen

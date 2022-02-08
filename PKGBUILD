@@ -16,7 +16,7 @@ md5sums=('ef2fed216cd12f315892fddfa08bd25b')
 package() {
 	cd $pkgname-$_commit
 	
-#install systemd service
+#install openrc service
 	install -Dm755 $_clean.script $pkgdir/usr/bin/$_clean
 	install -Dm644 $_clean $pkgdir/etc/init.d/$_clean
 
@@ -29,4 +29,5 @@ package() {
 	install -Dm755 $pkgname-pre.script ${pkgdir}/usr/share/libalpm/scripts/$pkgname-pre
 	install -Dm755 $pkgname-post.script ${pkgdir}/usr/share/libalpm/scripts/$pkgname-post
 	install -Dm755 $pkgname-remove.script ${pkgdir}/usr/share/libalpm/scripts/$pkgname-remove
+	install -Dm755 $pkgname-kernel-remove.script ${pkgdir}/usr/share/libalpm/scripts/$pkgname-kernel-remove
 }
