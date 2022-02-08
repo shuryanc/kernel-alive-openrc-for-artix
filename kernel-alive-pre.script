@@ -1,29 +1,63 @@
 #!/bin/bash
 
 #check if the previous kernel is still present if present do nothing
+echo "$(date +"%Y-%m-%d %T") info Start kernel-alive-pre script for $1" >> /var/log/kernel-alive/kernel-alive.log
+NeedBackup=$(grep -Po '(?<=Backup'$1'=).*' /etc/kernel-alive/kernel-alive.conf)
+if [[ $NeedBackup == "1" ]]; then
+	echo "$(date +"%Y-%m-%d %T") info NeedBackup=$NeedBackup" >> /var/log/kernel-alive/kernel-alive.log
+	KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /etc/kernel-alive/kernel-alive.conf)
+	KeepOtherKernelAsLatest=$(grep -Po '(?<=KeepOtherKernelAsLatest=).*' /etc/kernel-alive/kernel-alive.conf)
+	MaxNumberOfBackup=$(grep -Po '(?<=MaxNumberOfBackup=).*' /etc/kernel-alive/kernel-alive.conf)
+	linuxType=$(sed -n '/\['$1'\]/{n;p}' /etc/kernel-alive/kernel-alive.conf)
+	kernelno=$(sed -nE '/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}' /etc/kernel-alive/kernel-alive-history.txt | wc -l)
+	LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /etc/kernel-alive/kernel-alive-history.txt)
+	if [[ $LatestKernelVer == "" ]]; then
+		if [[ $1 == "linux" ]]; then
+			LatestKernelVer=$(ls -rt /lib/modules/ | grep -e "artix.[^backup]" | tail -n1)
+		fi
+		if [[ $1 == "linux-hardened" ]]; then
+			LatestKernelVer=$(ls -rt /lib/modules/ | grep -e "hardened.[^backup]" | tail -n1)
+		fi
+		if [[ $1 == "linux-lts" ]]; then
+			LatestKernelVer=$(ls -rt /lib/modules/ | grep -e "lts$" | tail -n1)
+		fi
+		if [[ $1 == "linux-zen" ]]; then
+			LatestKernelVer=$(ls -rt /lib/modules/ | grep -e "zen.[^backup]" | tail -n1)
+		fi
+		sed -i '/\[Latest '$1'\]/a '$LatestKernelVer /etc/kernel-alive/kernel-alive-history.txt
+	fi
+	KVER=$(uname -r)
+	oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /etc/kernel-alive/kernel-alive-history.txt)
 
-KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
-MaxNumberOfBackup=$(grep -Po '(?<=MaxNumberOfBackup=).*' /lib/modules/kernel-alive.conf)
-linuxType=$(sed -n '/\['$1'\]/{n;p}' /lib/modules/kernel-alive.conf)
-kernelno=$(sed -nE "/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}" /lib/modules/kernel-alive-history.txt | wc -l)
-LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /lib/modules/kernel-alive-history.txt)
-KVER=$(uname -r)
-oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /lib/modules/kernel-alive-history.txt)
-
-if [ ! -e /lib/modules/.old ]; then 
 
 #Backup modules in use
-	if [[ "$KeepLatestKernel"=="1" ]] || [[ $KVER==${LatestKernelVer} ]] || [[ $KVER!=${linuxType} ]] || [[ $kernelno < $MaxNumberOfBackup ]]; then
+	echo "$(date +"%Y-%m-%d %T") info KeepLatestKernel=$KeepLatestKernel" >> /var/log/kernel-alive/kernel-alive.log
+	echo "$(date +"%Y-%m-%d %T") info KVER=$KVER" >> /var/log/kernel-alive/kernel-alive.log
+	echo "$(date +"%Y-%m-%d %T") info linuxType=$linuxType" >> /var/log/kernel-alive/kernel-alive.log
+	echo "$(date +"%Y-%m-%d %T") info LatestKernelVer=$LatestKernelVer" >> /var/log/kernel-alive/kernel-alive.log
+	echo "$(date +"%Y-%m-%d %T") info KeepOtherKernelAsLatest=$KeepOtherKernelAsLatest" >> /var/log/kernel-alive/kernel-alive.log
+	echo "$(date +"%Y-%m-%d %T") info kernelno=$kernelno" >> /var/log/kernel-alive/kernel-alive.log
+	echo "$(date +"%Y-%m-%d %T") info MaxNumberOfBackup=$MaxNumberOfBackup" >> /var/log/kernel-alive/kernel-alive.log
+
+	if [[ $KeepLatestKernel == "1" && $KVER == $linuxType ]] || [[ $KVER == $LatestKernelVer ]] ||  [[ $KVER != $linuxType && $KeepOtherKernelAsLatest == "1" ]] || [[ $kernelno < $MaxNumberOfBackup ]]; then
 		KVER=${LatestKernelVer}
 		if test -e "/lib/modules/${KVER}"; then
 			echo msg "Backing up kernel ${KVER}"
-			cp /lib/modules/${KVER}/vmlinuz /boot/vmlinuz-$1-${KVER}
-			cp /boot/vmlinuz-$1 /boot/vmlinuz-$1-${KVER}
-   			rsync -AHXal --delete-after "/lib/modules/${KVER}" /lib/modules/backup/
-   			mkinitcpio --generate /boot/initramfs-$1-${KVER}.img --kernel ${KVER}
-			sed -i '/\['$1'\]/a '${KVER} /lib/modules/kernel-alive-history.txt
+#			cp /lib/modules/${KVER}/vmlinuz /boot/vmlinuz-$1-${KVER}
+#			cp /boot/vmlinuz-$1 /boot/vmlinuz-$1-${KVER}
+   			rsync -AHXal --delete-after "/lib/modules/${KVER}" /lib/modules/${1}-backup/
+			sed -i '/\['$1'\]/a '${KVER} /etc/kernel-alive/kernel-alive-history.txt
 		fi
 	fi
+else
+	echo "$(date +"%Y-%m-%d %T") info NeedBackup=$NeedBackup" >> /var/log/kernel-alive/kernel-alive.log
+	LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /etc/kernel-alive/kernel-alive-history.txt)
+	linuxType=$(sed -n '/\['$1'\]/{n;p}' /etc/kernel-alive/kernel-alive.conf)
+	if [[ $LatestKernelVer == $linuxType ]]; then
+		sed -i '/\[Latest '$1'\]/{N;s/\n.*//;}' /etc/kernel-alive/kernel-alive-history.txt
+	fi
+	echo "$(date +"%Y-%m-%d %T") info LatestKernelVer=$LatestKernelVer" >> /var/log/kernel-alive/kernel-alive.log
 fi
+
 	
 	
