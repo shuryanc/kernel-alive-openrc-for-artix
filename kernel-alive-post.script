@@ -10,75 +10,106 @@ printf "${GREEN}==>${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}" "$@" >&2
 
 #post transaction : check if still present old kernel if yes warning the user and do nothing
 
-
-KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /lib/modules/kernel-alive.conf)
-MaxNumberOfBackup=$(grep -Po '(?<=MaxNumberOfBackup=).*' /lib/modules/kernel-alive.conf)
-linuxType=$(sed -n '/\['$1'\]/{n;p}' /lib/modules/kernel-alive.conf)
-kernelno=$(sed -nE "/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}" /lib/modules/kernel-alive-history.txt | wc -l)
-LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /lib/modules/kernel-alive-history.txt)
-KVER=$(uname -r)
-oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /lib/modules/kernel-alive-history.txt)
-NewKernelVer=$(file -bL /boot/vmlinuz-$1 | grep -o 'version [^ ]*' | cut -d ' ' -f 2)
-KVER=$(uname -r)
-n=$((MaxNumberOfBackup+1))
-a=""
-while [[ $n > 0 ]]
-do
-	a=$a"n;"
-	n=$((n-1))
-done
-if [[ "$KeepLatestKernel" == "1" ]] || [[ $KVER == ${LatestKernelVer} ]] || [[ $KVER != $linuxType ]]; then
-	while [[ "$oldkern" == $linuxType ]]
+NeedBackup=$(grep -Po '(?<=Backup'$1'=).*' /etc/kernel-alive/kernel-alive.conf)
+if [[ $NeedBackup == "1" ]]; then
+	KeepLatestKernel=$(grep -Po '(?<=KeepLatestKernel=).*' /etc/kernel-alive/kernel-alive.conf)
+	KeepOtherKernelAsLatest=$(grep -Po '(?<=KeepOtherKernelAsLatest=).*' /etc/kernel-alive/kernel-alive.conf)
+	MaxNumberOfBackup=$(grep -Po '(?<=MaxNumberOfBackup=).*' /etc/kernel-alive/kernel-alive.conf)
+	linuxType=$(sed -n '/\['$1'\]/{n;p}' /etc/kernel-alive/kernel-alive.conf)
+	kernelno=$(sed -nE '/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}' /etc/kernel-alive/kernel-alive-history.txt | wc -l)
+	LatestKernelVer=$(sed -n '/\[Latest '$1'\]/{n;p}' /etc/kernel-alive/kernel-alive-history.txt)
+	if [[ $LatestKernelVer == "" ]]; then
+		if [[ $1 == "linux" ]]; then
+			LatestKernelVer=$(ls -rt /lib/modules/${1}-backup/ | grep artix | tail -n1)
+		fi
+		if [[ $1 == "linux-hardened" ]]; then
+			LatestKernelVer=$(ls -rt /lib/modules/${1}-backup/ | grep hardened | tail -n1)
+		fi
+		if [[ $1 == "linux-lts" ]]; then
+			LatestKernelVer=$(ls -rt /lib/modules/${1}-backup/ | grep lts | tail -n1)
+		fi
+		if [[ $1 == "linux-zen" ]]; then
+			LatestKernelVer=$(ls -rt /lib/modules/${1}-backup/ | grep zen | tail -n1)
+		fi
+	fi
+	KVER=$(uname -r)
+	n=$((MaxNumberOfBackup+1))
+	a=""
+	while [[ $n > 0 ]]
 	do
-		echo msg "Removing kernel ${oldkern}"
-		rm -r /lib/modules/"$oldkern"
-		rm /boot/vmlinuz-$1-$oldkern
-    		rm /boot/initramfs-$1-$oldkern.img
-		sed -i '/\['$1'\]/!b;'$a'd' /lib/modules/kernel-alive-history.txt
-		oldkern=$(sed -ne '/\['$1'\]/{:a;n;1~'"$((MaxNumberOfBackup+1))"'!ba;p;q}' /lib/modules/kernel-alive-history.txt)
+		a=$a"n;"
+		n=$((n-1))
 	done
+	oldkern=$(sed -n '/\['$1'\]/{'$a'p}' /etc/kernel-alive/kernel-alive-history.txt)
+	NewKernelVer=$(file -bL /boot/vmlinuz-$1 | grep -o 'version [^ ]*' | cut -d ' ' -f 2)
+	KVER=$(uname -r)
+
+	echo "KeepLatestKernel= $KeepLatestKernel"
+	echo "KVER= $KVER"
+	echo "LatestKernelVer= $LatestKernelVer"
+	echo "linuxType= $linuxType"
+	if [[ $KeepLatestKernel == "1" && $KVER == $linuxType ]] || [[ $KVER == $LatestKernelVer ]] || [[ $KVER != $linuxType && $KeepOtherKernelAsLatest == "1" ]]; then
+		echo "oldkern= $oldkern"
+		echo "kernelno= $kernelno"
+		echo "MaxNumberOfBackup= $MaxNumberOfBackup"
+		while [[ "$oldkern" == $linuxType ]] && [[ $kernelno > $MaxNumberOfBackup ]]
+		do
+			echo msg "Removing kernel ${oldkern}"
+			rm /boot/vmlinuz-$1-$oldkern
+    			rm /boot/initramfs-$1-$oldkern.img
+			sed -i '/\['$1'\]/!b;'$a'd' /etc/kernel-alive/kernel-alive-history.txt
+			oldkern=$(sed -n '/\['$1'\]/{'$a'p}' /etc/kernel-alive/kernel-alive-history.txt)
+			kernelno=$(sed -nE '/^\['$1'\]$/{:l n;/^(\[.*\])?$/q;p;bl}' /etc/kernel-alive/kernel-alive-history.txt | wc -l)
+			echo "oldkern= $oldkern"
+			echo "kernelno= $kernelno"
+		done
 #		rm /lib/modules/.old
-fi
-sed -i '/\[Latest '$1'\]/{N;s/\n.*//;}' /lib/modules/kernel-alive-history.txt
-sed -i '/\[Latest '$1'\]/a '${NewKernelVer} /lib/modules/kernel-alive-history.txt
-if [ ! -e /lib/modules/.old ]; then
-#Miss the logic to remove kernel when the user in the default kernel while keeplatestkernel=0
-	if [[ "$KeepLatestKernel"=="1" ]] || [[ $KVER==$LatestKernelVer ]] || [[ $KVER != $linuxType ]]; then
+
+
+#rm temp kernel backup folder
 		KVER=$LatestKernelVer
 
-		if test -e "/lib/modules/backup/${KVER}"; then
-		rsync -AHXal --ignore-existing "/lib/modules/backup/${KVER}" /lib/modules/
+		if test -e "/lib/modules/${1}-backup/${KVER}"; then
+			rsync -AHXal --ignore-existing "/lib/modules/${1}-backup/${KVER}" /lib/modules/
+			cp /lib/modules/${KVER}/vmlinuz /boot/vmlinuz-$1-${KVER}
+			mkinitcpio --generate /boot/initramfs-$1-${KVER}.img --kernel ${KVER}
 		fi
-	
-		cd /lib/modules
-		oldkern=$(ls backup)
-		touch .old && echo "$oldkern" > .old
 
-		rm -rf /lib/modules/backup
+		rm -rf /lib/modules/${1}-backup
 		update-grub
 		#Inform user
-		echo
-		msg "Warning:
+		if [ ! -e /lib/modules/.old ]; then
+			echo
+			msg "Warning (${1}):
 	 -> Kernel has been updated. Modules of the current kernel
 	 -> have been backed up so you can continue to use your
 	 -> computer. However, the new kernel will only work 
 	 -> at next boot.
 	"
+			touch /lib/modules/.old && echo "" > /lib/modules/.old
+		else
+			echo
+			msg "Warning (${1}):
+	 -> This computer hasn't been restarted for a while. You are
+	 -> running an old kernel or another kernel type. In order
+	 -> to use a new version of the kernel, please restart your
+	 -> computer as soon as possible.
+	"
+		fi
 	else
+
 		echo
-		msg "Warning:
+		msg "Warning (${1}):
 	 -> Kernel has been updated. Modules of the current kernel
 	 -> have been replaced by the new kernel. You can continue
 	 -> to use your computer. However, the new kernel will only
 	 -> work at next boot.
 	 "
 	fi
-else
-	echo
-	msg "Warning:
-	 -> This computer hasn't been restarted for a while.
-	 -> You are running an old kernel. In order to use a
-	 -> new version of the kernel, please restart your
-	 -> computer as soon as possible.
-	"
+
+#Update the lastest kernel field in kernel-alive-history.txt
+	if [[ $LatestKernelVer == $linuxType ]]; then
+		sed -i '/\[Latest '$1'\]/{N;s/\n.*//;}' /etc/kernel-alive/kernel-alive-history.txt
+	fi
+	sed -i '/\[Latest '$1'\]/a '${NewKernelVer} /etc/kernel-alive/kernel-alive-history.txt
 fi
