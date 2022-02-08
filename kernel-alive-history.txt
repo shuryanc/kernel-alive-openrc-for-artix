@@ -1,32 +1,3 @@
-[linux]
-5.16.3-artix1-1
-5.16.1-artix1-1
-5.15.10-artix1-1
-
-[Latest linux]
-5.16.7-artix1-1
-
-
-[linux-hardened]
-5.15.19-hardened1-1-hardened
-5.15.16-hardened1-1-hardened
-5.15.12-hardened1-1-hardened
-
-[Latest linux-hardened]
-5.15.21-hardened1-1-hardened
-
-[linux-lts]
-5.10.76-1-lts
-5.10.74-1-lts
-5.10.70-1-lts
-
-[Latest linux-lts]
-5.15.16-1-lts
-
-[linux-zen]
-5.16.4-zen1-1-zen
-5.16.3-zen1-1-zen
-5.16.2-zen1-1-zen
-
-[Latest linux-zen]
-5.16.5-zen1-1-zen
+5.12.4-artix1-1
+5.12.6-artix1-1
+5.12.8-artix1-1
